@@ -1,6 +1,6 @@
 ---
-- name: Exercise #1
+- name: Hello world webpage
   hosts: localhost
-
   roles:
-    - print
+    - prepare
+    - apache
