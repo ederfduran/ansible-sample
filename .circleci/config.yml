@@ -1,10 +1,5 @@
 version: 2.1
 
-orbs:
-  # A reusable package of YAML configuration that condenses
-  # repeated pieces of config into a single line of code.
-  python: circleci/python@0.2.1
-
 commands:
   # similar to a function definition print_pipeline_id(caller="Default") => echo << parameters.caller >>
   print_pipeline_id:
@@ -17,20 +12,6 @@ commands:
       - run: echo << parameters.caller >> $CIRCLE_WORKFLOW_ID
 
 jobs:
-  build-and-test:
-    executor: python/default
-    steps:
-      - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
-      - run:
-          name: "echo an env var that is part of our project"
-          # ENV variable previusly created on circleCI
-          command: echo $USER_NAME #
-      # - run:
-      #     command: ./manage.py test
-      #     name: Test
   save_file:
     docker:
       - image: circleci/python:3.8
@@ -66,7 +47,6 @@ jobs:
 workflows:
   main:
     jobs:
-      - build-and-test
       - save_file
       - read_file:
           requires:
