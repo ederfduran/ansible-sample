@@ -44,6 +44,22 @@ jobs:
               --template-file template.yml \
               --stack-name my-stack
 
+  configure_infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["52:80:eb:0a:99:53:b4:0b:09:8b:40:76:9f:11:f0:42"]
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible # install the dependencies needed for your playbook
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i inventory.txt main-remote.yml
+
 workflows:
   main:
     jobs:
@@ -51,4 +67,4 @@ workflows:
       - read_file:
           requires:
             - save_file
-      - create_infrastructure
+      - configure_infrastructure
