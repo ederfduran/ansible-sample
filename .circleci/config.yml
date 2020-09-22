@@ -54,7 +54,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible # install the dependencies needed for your playbook
+            sudo pip install ansible # install the dependencies needed for your playbook
       - run:
           name: Configure server
           command: |
