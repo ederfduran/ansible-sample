@@ -2,7 +2,5 @@
 - name: setting up a web server in an EC2
   hosts: all
   user: ubuntu
-  vars:
-    - ansible_host_key_checking: false
   roles:
     - setup
