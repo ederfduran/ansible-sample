@@ -28,7 +28,11 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      - run: yum install -y tar
+      - run:
+          name: install workspace depencies
+          command: |
+            yum install -y tar
+            yum install -y gzip
       - run:
           name: get host from aws
           command: |
