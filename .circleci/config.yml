@@ -43,12 +43,6 @@ jobs:
             aws cloudformation deploy \
               --template-file template.yml \
               --stack-name my-stack
-          environment:
-            MY_HOST: aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text
-      - run:
-          name: check for host env variable
-          command: |
-            echo "{{ansible_env.MY_HOST}}"
 
   configure_infrastructure:
     docker:
@@ -62,9 +56,15 @@ jobs:
           command: |
             sudo pip install ansible # install the dependencies needed for your playbook
       - run:
+          name: get host
+          command: |
+            echo 'export MY_HOST=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text)' >> $BASH_ENV
+            source $BASH_ENV
+            echo $MY_HOST
+      - run:
           name: add Host
           command: |
-            echo "{{ansible_env.MY_HOST}}" >> inventory
+            echo "${MY_HOST}" >> inventory
       - run:
           name: Configure server
           command: |
@@ -94,5 +94,9 @@ workflows:
           requires:
             - save_file
       - create_infrastructure
-      - configure_infrastructure
-      - smoke_test
+      - configure_infrastructure:
+          requires:
+            - create_infrastructure
+      - smoke_test:
+          requires:
+            - configure_infrastructure
