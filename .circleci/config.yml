@@ -12,26 +12,6 @@ commands:
       - run: echo << parameters.caller >> $CIRCLE_WORKFLOW_ID
 
 jobs:
-  save_file:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - print_pipeline_id:
-          caller: "Eder"
-      - run: echo "persist file between jobs" > ~/output.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - output.txt
-
-  read_file:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run: cat ~/output.txt
-
   create_infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -58,6 +38,11 @@ jobs:
           name: add host to inventory
           command: |
             echo "${MY_HOST}" >> inventory
+            echo "${MY_HOST}" > ~/host.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - host.txt
 
   configure_infrastructure:
     docker:
@@ -79,11 +64,14 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
+      - attach_workspace:
+          at: ~/
       - run: apk add --update curl
       - run:
           name: smoke test.
           command: |
-            URL="{{ansible_env.MY_HOST}}:3000"
+            MY_HOST=$(cat host.txt)
+            URL="${MY_HOST}:3000"
             if curl -s --head ${URL} # test if server is up and running
             then
               return 0
@@ -94,10 +82,6 @@ jobs:
 workflows:
   main:
     jobs:
-      - save_file
-      - read_file:
-          requires:
-            - save_file
       - create_infrastructure
       - add_target_host:
           requires:
