@@ -1,15 +1,12 @@
 version: 2.1
 
 commands:
-  # similar to a function definition print_pipeline_id(caller="Default") => echo << parameters.caller >>
-  print_pipeline_id:
-    description: "A very simple command for demonstration purposes"
-    parameters:
-      caller:
-        type: string
-        default: "Default"
+  destroy_environment:
     steps:
-      - run: echo << parameters.caller >> $CIRCLE_WORKFLOW_ID
+      - run:
+          name: Destroy Environment
+          command: |
+            aws cloudformation delete-stack my-stack
 
 jobs:
   create_infrastructure:
@@ -23,6 +20,8 @@ jobs:
             aws cloudformation deploy \
               --template-file template.yml \
               --stack-name my-stack
+      - destroy_environment:
+          when: on_fail
 
   add_target_host:
     docker:
@@ -33,25 +32,6 @@ jobs:
           command: |
             yum install -y tar
             yum install -y gzip
-      - run:
-          name: get host from aws
-          command: |
-            echo 'export MY_HOST=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text)' >> $BASH_ENV
-            source $BASH_ENV
-            echo $MY_HOST
-      - run:
-          name: save host
-          command: |
-            echo "${MY_HOST}" > ~/host.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - host.txt
-
-  add_target_host_alpine:
-    docker:
-      - image: senseyeio/alpine-aws-cli:latest
-    steps:
       - run:
           name: get host from aws
           command: |
