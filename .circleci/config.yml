@@ -21,7 +21,7 @@ jobs:
               --template-file template.yml \
               --stack-name my-stack
       - destroy_environment:
-          when: on_fail
+        when: on_fail
 
   add_target_host:
     docker:
