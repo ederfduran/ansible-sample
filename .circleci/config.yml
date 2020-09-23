@@ -75,7 +75,7 @@ jobs:
       - run:
           name: smoke test.
           command: |
-            MY_HOST=$(cat host.txt)
+            MY_HOST=$(cat ~/host.txt)
             URL="${MY_HOST}:3000"
             if curl -s --head ${URL} # test if server is up and running
             then
