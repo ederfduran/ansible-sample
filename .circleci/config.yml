@@ -20,8 +20,10 @@ jobs:
             aws cloudformation deploy \
               --template-file template.yml \
               --stack-name my-stack
-      - destroy_environment:
-        when: on_fail
+      - run:
+          name: on error
+          command: destroy_environment
+          when: on_fail
 
   add_target_host:
     docker:
