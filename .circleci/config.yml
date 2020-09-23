@@ -50,20 +50,8 @@ jobs:
 
   add_target_host_alpine:
     docker:
-      - image: alpine:latest
+      - image: senseyeio/alpine-aws-cli:latest
     steps:
-      - run:
-          name: install awc cli
-          command: |
-            apk add --update \
-            python \
-            python-dev \
-            py-pip \
-            build-base \
-            && pip install awscli --upgrade --user \
-            && apk --purge -v del py-pip \
-            && rm -rf /var/cache/apk/*
-            aws --version
       - run:
           name: get host from aws
           command: |
