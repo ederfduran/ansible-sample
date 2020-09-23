@@ -55,6 +55,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo pip install ansible # install the dependencies needed for your playbook
+            sudo pip install awscli --upgrade --user
       - run:
           name: get host
           command: |
