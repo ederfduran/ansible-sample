@@ -123,7 +123,7 @@ workflows:
             - create_infrastructure
       - configure_infrastructure:
           requires:
-            - add_target_host
+            - add_target_host_alpine
       - smoke_test:
           requires:
             - configure_infrastructure
