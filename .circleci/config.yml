@@ -45,7 +45,7 @@ jobs:
             echo "${MY_HOST}" >> inventory
             echo "${MY_HOST}" > ~/host.txt
       - persist_to_workspace:
-          root: ~/
+          root: /tmp/hosts
           paths:
             - host.txt
 
@@ -70,12 +70,12 @@ jobs:
       - image: alpine:latest
     steps:
       - attach_workspace:
-          at: ~/
+          at: /tmp/hosts
       - run: apk add --update curl
       - run:
           name: smoke test.
           command: |
-            MY_HOST=$(cat ~/host.txt)
+            MY_HOST=$(cat /tmp/hosts/host.txt)
             URL="${MY_HOST}:3000"
             if curl -s --head ${URL} # test if server is up and running
             then
