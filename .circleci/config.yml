@@ -44,6 +44,21 @@ jobs:
               --template-file template.yml \
               --stack-name my-stack
 
+  add_target_host:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - run:
+          name: get host from aws
+          command: |
+            echo 'export MY_HOST=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text)' >> $BASH_ENV
+            source $BASH_ENV
+            echo $MY_HOST
+      - run:
+          name: add host to inventory
+          command: |
+            echo "${MY_HOST}" >> inventory
+
   configure_infrastructure:
     docker:
       - image: circleci/python:3.8
@@ -55,17 +70,6 @@ jobs:
           name: Install dependencies
           command: |
             sudo pip install ansible # install the dependencies needed for your playbook
-            sudo pip install awscli --upgrade --user
-      - run:
-          name: get host
-          command: |
-            echo 'export MY_HOST=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text)' >> $BASH_ENV
-            source $BASH_ENV
-            echo $MY_HOST
-      - run:
-          name: add Host
-          command: |
-            echo "${MY_HOST}" >> inventory
       - run:
           name: Configure server
           command: |
@@ -95,9 +99,12 @@ workflows:
           requires:
             - save_file
       - create_infrastructure
-      - configure_infrastructure:
+      - add_target_host:
           requires:
             - create_infrastructure
+      - configure_infrastructure:
+          requires:
+            - add_target_host
       - smoke_test:
           requires:
             - configure_infrastructure
