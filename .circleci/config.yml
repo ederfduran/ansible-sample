@@ -28,6 +28,7 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
+      - run: yum install -y tar
       - run:
           name: get host from aws
           command: |
