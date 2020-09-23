@@ -63,7 +63,7 @@ jobs:
           command: |
             echo "${MY_HOST}" > ~/host.txt
       - persist_to_workspace:
-          root: /tmp
+          root: ~/
           paths:
             - host.txt
 
