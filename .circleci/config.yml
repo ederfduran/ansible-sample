@@ -40,12 +40,42 @@ jobs:
             source $BASH_ENV
             echo $MY_HOST
       - run:
-          name: add host to inventory
+          name: save host
           command: |
-            echo "${MY_HOST}" >> inventory
             echo "${MY_HOST}" > ~/host.txt
       - persist_to_workspace:
-          root: /tmp/hosts
+          root: ~/
+          paths:
+            - host.txt
+
+  add_target_host_alpine:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run:
+          name: install awc cli
+          command: |
+            apk add --update \
+            python \
+            python-dev \
+            py-pip \
+            build-base \
+            && pip install awscli --upgrade --user \
+            && apk --purge -v del py-pip \
+            && rm -rf /var/cache/apk/*
+            aws --version
+      - run:
+          name: get host from aws
+          command: |
+            echo 'export MY_HOST=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text)' >> $BASH_ENV
+            source $BASH_ENV
+            echo $MY_HOST
+      - run:
+          name: save host
+          command: |
+            echo "${MY_HOST}" > ~/host.txt
+      - persist_to_workspace:
+          root: /tmp
           paths:
             - host.txt
 
@@ -70,12 +100,12 @@ jobs:
       - image: alpine:latest
     steps:
       - attach_workspace:
-          at: /tmp/hosts
+          at: ~/
       - run: apk add --update curl
       - run:
           name: smoke test.
           command: |
-            MY_HOST=$(cat /tmp/hosts/host.txt)
+            MY_HOST=$(cat ~/host.txt)
             URL="${MY_HOST}:3000"
             if curl -s --head ${URL} # test if server is up and running
             then
@@ -88,7 +118,7 @@ workflows:
   main:
     jobs:
       - create_infrastructure
-      - add_target_host:
+      - add_target_host_alpine:
           requires:
             - create_infrastructure
       - configure_infrastructure:
