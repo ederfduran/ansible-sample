@@ -43,6 +43,12 @@ jobs:
             aws cloudformation deploy \
               --template-file template.yml \
               --stack-name my-stack
+          environment:
+            MY_HOST: aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters --region us-east-1 --output text
+      - run:
+          name: check for host env variable
+          command: |
+            echo "{{ansible_env.MY_HOST}}"
 
   configure_infrastructure:
     docker:
@@ -56,9 +62,29 @@ jobs:
           command: |
             sudo pip install ansible # install the dependencies needed for your playbook
       - run:
+          name: add Host
+          command: |
+            echo "{{ansible_env.MY_HOST}}" >> inventory
+      - run:
           name: Configure server
           command: |
             ansible-playbook -i inventory main-remote.yml
+
+  smoke_test:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run: apk add --update curl
+      - run:
+          name: smoke test.
+          command: |
+            URL="{{ansible_env.MY_HOST}}:3000"
+            if curl -s --head ${URL} # test if server is up and running
+            then
+              return 0
+            else
+              return 1
+            fi
 
 workflows:
   main:
@@ -67,4 +93,6 @@ workflows:
       - read_file:
           requires:
             - save_file
+      - create_infrastructure
       - configure_infrastructure
+      - smoke_test
